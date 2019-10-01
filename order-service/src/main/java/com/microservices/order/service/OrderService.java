@@ -2,6 +2,7 @@ package com.microservices.order.service;
 
 import com.microservices.order.dto.OrderDto;
 import com.microservices.order.entity.OrderStatus;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 

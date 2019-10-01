@@ -13,14 +13,16 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name="OrderItem")
+@Table
 public class OrderItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private int orderId;
+    @ManyToOne
+    @JoinColumn(name="order_id")
+    private OrderEntity orderEntity;
 
     private int itemId;
 

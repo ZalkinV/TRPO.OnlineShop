@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name = "Order")
+@Table
 public class OrderEntity {
 
     @Id
@@ -23,10 +23,10 @@ public class OrderEntity {
     private String userName;
 
     @Enumerated(value = EnumType.ORDINAL)
+    @Column(name="status")
     private OrderStatus orderStatus = OrderStatus.COLLECTING;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="orderId")
-    List<OrderItemEntity> orderItemEntities = new ArrayList<>();
+    @OneToMany(mappedBy = "orderEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItemEntity> orderItemEntities;
 
 }
