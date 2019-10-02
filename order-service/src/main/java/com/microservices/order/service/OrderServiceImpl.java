@@ -4,6 +4,7 @@ import com.microservices.order.dto.OrderDto;
 import com.microservices.order.dto.OrderItemDto;
 import com.microservices.order.entity.OrderEntity;
 import com.microservices.order.entity.OrderItemEntity;
+import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.repository.OrderRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,17 @@ public class OrderServiceImpl implements OrderService {
             .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
 
         return OrderServiceImpl.convertToDto(orderEntity);
+    }
+
+    @Override
+    public OrderDto setOrderStatus(int orderId, OrderStatus orderStatus){
+        OrderEntity order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
+
+        order.setOrderStatus(orderStatus);
+        OrderEntity savedOrder = orderRepository.save(order);
+
+        return OrderServiceImpl.convertToDto(savedOrder);
     }
 
     private static OrderDto convertToDto(OrderEntity orderEntity){

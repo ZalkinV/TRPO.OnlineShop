@@ -14,5 +14,5 @@ public interface OrderService {
 
     //OrderDto addItem(int orderId, ItemAdditionalParametersDto parametersDto);
 
-    //OrderDto setStatus(int orderId, OrderStatus status);
+    OrderDto setOrderStatus(int orderId, OrderStatus status);
 }
