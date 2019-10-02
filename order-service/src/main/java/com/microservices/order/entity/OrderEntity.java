@@ -29,4 +29,11 @@ public class OrderEntity {
     @OneToMany(mappedBy = "orderEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItemEntity> orderItemEntities;
 
+
+    public OrderEntity(String userName)
+    {
+        this.userName = userName;
+        this.orderStatus = OrderStatus.COLLECTING;
+        this.orderItemEntities = new ArrayList<OrderItemEntity>();
+    }
 }
