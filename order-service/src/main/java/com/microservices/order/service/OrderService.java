@@ -10,7 +10,7 @@ public interface OrderService {
 
     List<OrderDto> getAllOrders();
 
-    //OrderDto getOrderById(int orderId);
+    OrderDto getOrderById(int orderId);
 
     //OrderDto addItem(int orderId, ItemAdditionalParametersDto parametersDto);
 

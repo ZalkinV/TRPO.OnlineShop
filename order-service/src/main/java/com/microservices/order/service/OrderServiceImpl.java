@@ -33,6 +33,14 @@ public class OrderServiceImpl implements OrderService {
         return orders;
     }
 
+    @Override
+    public OrderDto getOrderById(int orderId){
+        OrderEntity orderEntity = orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
+
+        return OrderServiceImpl.convertToDto(orderEntity);
+    }
+
     private static OrderDto convertToDto(OrderEntity orderEntity){
         List<OrderItemDto> orderItems = orderEntity
             .getOrderItemEntities().stream()

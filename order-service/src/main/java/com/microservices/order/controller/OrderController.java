@@ -3,9 +3,7 @@ package com.microservices.order.controller;
 import com.microservices.order.dto.OrderDto;
 import com.microservices.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,4 +21,10 @@ public class OrderController {
     public List<OrderDto> getAllOrders(){
         return orderService.getAllOrders();
     }
+
+    @GetMapping(value = "{id}")
+    public OrderDto getOrderById(@PathVariable int id){
+        return orderService.getOrderById(id);
+    }
+
 }
