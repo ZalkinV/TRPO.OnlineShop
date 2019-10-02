@@ -36,21 +36,24 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDto getOrderById(int orderId){
-        OrderEntity orderEntity = orderRepository.findById(orderId)
-            .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
+        OrderEntity orderEntity = getExistedOrder(orderId);
 
         return OrderServiceImpl.convertToDto(orderEntity);
     }
 
     @Override
     public OrderDto setOrderStatus(int orderId, OrderStatus orderStatus){
-        OrderEntity order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
+        OrderEntity order = getExistedOrder(orderId);
 
         order.setOrderStatus(orderStatus);
         OrderEntity savedOrder = orderRepository.save(order);
 
         return OrderServiceImpl.convertToDto(savedOrder);
+    }
+
+    private OrderEntity getExistedOrder(int orderId){
+        return orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
     }
 
     private static OrderDto convertToDto(OrderEntity orderEntity){
