@@ -1,5 +1,6 @@
 package com.microservices.order.controller;
 
+import com.microservices.order.dto.ItemChangeAmountDto;
 import com.microservices.order.dto.OrderDto;
 import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.service.OrderService;
@@ -26,6 +27,11 @@ public class OrderController {
     @GetMapping(value = "{orderId}")
     public OrderDto getOrderById(@PathVariable int orderId){
         return orderService.getOrderById(orderId);
+    }
+
+    @PostMapping(value = "{orderId}/item")
+    public OrderDto addItemToOrder(@PathVariable int orderId, @RequestBody ItemChangeAmountDto additionDto) {
+        return orderService.addItemToOrder(orderId, additionDto);
     }
 
     @PutMapping(value = "{orderId}/status/{orderStatus}")

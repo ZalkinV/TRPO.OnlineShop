@@ -1,5 +1,6 @@
 package com.microservices.order.service;
 
+import com.microservices.order.dto.ItemChangeAmountDto;
 import com.microservices.order.dto.OrderDto;
 import com.microservices.order.dto.OrderItemDto;
 import com.microservices.order.entity.OrderEntity;
@@ -9,10 +10,12 @@ import com.microservices.order.repository.OrderRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +42,28 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity orderEntity = getExistedOrder(orderId);
 
         return OrderServiceImpl.convertToDto(orderEntity);
+    }
+
+    @Override
+    public OrderDto addItemToOrder(int orderId, ItemChangeAmountDto additionDto){
+        Optional<OrderEntity> orderOptional = orderRepository.findById(orderId);
+
+        if (orderOptional.isPresent()){
+            OrderItemEntity orderItem = orderOptional.get()
+                .getOrderItemEntities().stream()
+                .filter(oie -> oie.getItemId() == additionDto.getItemId())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("There is no orderItem with itemId=" + additionDto.getItemId() + " in order with id=" + orderId));
+
+            int newAmount = orderItem.getAmount() + additionDto.getAmount();
+            orderItem.setAmount(newAmount);
+        } else {
+            throw new NotImplementedException();
+        }
+
+        OrderEntity savedOrder = orderRepository.save(orderOptional.get());
+
+        return OrderServiceImpl.convertToDto(savedOrder);
     }
 
     @Override
