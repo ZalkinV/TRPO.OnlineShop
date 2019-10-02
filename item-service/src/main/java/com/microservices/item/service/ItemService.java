@@ -1,16 +1,17 @@
 package com.microservices.item.service;
 
+import com.microservices.item.dto.ItemCreationDto;
+import com.microservices.item.dto.ItemDto;
 import com.microservices.item.entity.ItemEntity;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ItemService {
 
-    List<ItemEntity> list();
-    Optional<ItemEntity> getOne(long id);
-    ItemEntity create(ItemEntity item);
-    ItemEntity increaseAmount(long id, long amount) throws RuntimeException;
-    ItemEntity decreaseAmount(long id, long amount) throws RuntimeException;
+    List<ItemDto> list();
+    ItemDto getOne(long id);
+    ItemDto create(ItemCreationDto item);
+    ItemDto increaseAmount(long id, long amount) throws RuntimeException;
+    ItemDto decreaseAmount(long id, long amount) throws RuntimeException;
 
 }

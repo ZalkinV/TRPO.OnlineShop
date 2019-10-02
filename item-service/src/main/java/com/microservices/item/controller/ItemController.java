@@ -1,6 +1,8 @@
 package com.microservices.item.controller;
 
 
+import com.microservices.item.dto.ItemCreationDto;
+import com.microservices.item.dto.ItemDto;
 import com.microservices.item.entity.ItemEntity;
 import com.microservices.item.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,27 +22,27 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemEntity> list() {
+    public List<ItemDto> list() {
         return itemService.list();
     }
 
     @GetMapping("{id}")
-    public Optional<ItemEntity> getOne(@PathVariable long id){
+    public ItemDto getOne(@PathVariable long id){
         return itemService.getOne(id);
     }
 
     @PostMapping
-    public ItemEntity create(@Valid @RequestBody ItemEntity item) {
-        return itemService.create(item);
+    public ItemDto create(@Valid @RequestBody ItemCreationDto itemCreationDto) {
+        return itemService.create(itemCreationDto);
     }
 
     @PutMapping("{id}/increasing/{amount}")
-    public ItemEntity increaseAmount(@PathVariable long amount, @PathVariable long id) {
+    public ItemDto increaseAmount(@PathVariable long amount, @PathVariable long id) {
         return itemService.increaseAmount(id, amount);
     }
 
     @PutMapping("{id}/decreasing/{amount}")
-    public ItemEntity decreaseAmount(@PathVariable long amount, @PathVariable long id) {
+    public ItemDto decreaseAmount(@PathVariable long amount, @PathVariable long id) {
         return itemService.decreaseAmount(id, amount);
     }
 

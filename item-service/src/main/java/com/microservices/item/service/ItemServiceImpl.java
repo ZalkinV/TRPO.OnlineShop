@@ -1,13 +1,14 @@
 package com.microservices.item.service;
 
+import com.microservices.item.dto.ItemCreationDto;
+import com.microservices.item.dto.ItemDto;
 import com.microservices.item.entity.ItemEntity;
 import com.microservices.item.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ItemServiceImpl implements ItemService{
@@ -20,31 +21,49 @@ public class ItemServiceImpl implements ItemService{
     }
 
     @Override
-    public List<ItemEntity> list() {
-        return (List<ItemEntity>) itemRepository.findAll();
+    public List<ItemDto> list() {
+
+        List<ItemDto> items = new ArrayList<>();
+        itemRepository.findAll().forEach(item -> {
+            items.add(convertToItemDto(item));
+        });
+
+        return items;
     }
 
     @Override
-    public Optional<ItemEntity> getOne(long id) {
-        return itemRepository.findById(id);
+    public ItemDto getOne(long id) {
+        ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
+        return convertToItemDto(item);
     }
 
     @Override
-    public ItemEntity create(ItemEntity item) {
-        return itemRepository.save(item);
+    public ItemDto create(ItemCreationDto itemCreationDto) {
+        return convertToItemDto(itemRepository.save(
+                new ItemEntity(itemCreationDto.getName(), itemCreationDto.getPrice(), itemCreationDto.getAmount()))
+        );
     }
 
     @Override
-    public ItemEntity increaseAmount(long id, long amount) throws RuntimeException {
+    public ItemDto increaseAmount(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
         item.setAvailableAmount(item.getAvailableAmount()+ amount);
-        return itemRepository.save(item);
+        return convertToItemDto(itemRepository.save(item));
     }
 
     @Override
-    public ItemEntity decreaseAmount(long id, long amount) throws RuntimeException {
+    public ItemDto decreaseAmount(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
         item.setAvailableAmount(item.getAvailableAmount() - amount);
-        return itemRepository.save(item);
+        return convertToItemDto(itemRepository.save(item));
+    }
+
+    private ItemDto convertToItemDto(ItemEntity item) {
+        return new ItemDto(
+                item.getEntityId(),
+                item.getName(),
+                item.getPrice(),
+                item.getAvailableAmount()
+        );
     }
 }

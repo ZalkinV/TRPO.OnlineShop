@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @Table(name="items")
 @NoArgsConstructor
 public class ItemEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long entityId;
@@ -26,4 +27,11 @@ public class ItemEntity {
     @NotNull(message = "Please provide an amount")
     @DecimalMin("1.00")
     private Long availableAmount;
+
+    public ItemEntity(String name, BigDecimal price, Long availableAmount) {
+        this.name = name;
+        this.price = price;
+        this.availableAmount = availableAmount;
+    }
 }
+
