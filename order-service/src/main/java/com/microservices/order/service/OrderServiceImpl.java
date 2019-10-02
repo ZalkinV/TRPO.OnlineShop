@@ -102,6 +102,7 @@ public class OrderServiceImpl implements OrderService {
     private static OrderItemDto convertToDto(OrderItemEntity orderItemEntity){
         return new OrderItemDto(
             orderItemEntity.getId(),
+            orderItemEntity.getItemId(),
             orderItemEntity.getAmount(),
             orderItemEntity.getName(),
             orderItemEntity.getPrice());
