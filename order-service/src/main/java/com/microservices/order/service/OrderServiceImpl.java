@@ -25,30 +25,37 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDto> getAllOrders(){
-
-        List<OrderDto> orders = new ArrayList<OrderDto>();
-        orderRepository.findAll().forEach(orderEntity ->
-                orders.add(convertToOrderDto(orderEntity)));
+        List<OrderDto> orders = orderRepository
+            .findAll().stream()
+            .map(OrderServiceImpl::convertToDto)
+            .collect(Collectors.toList());
 
         return orders;
     }
 
-    private OrderDto convertToOrderDto(OrderEntity orderEntity){
-        List<OrderItemDto> orderItems = orderEntity.getOrderItemEntities()
-                .stream()
-                .map(x -> mapper.map(x, OrderItemDto.class))
-                .collect(Collectors.toCollection(ArrayList::new));
+    private static OrderDto convertToDto(OrderEntity orderEntity){
+        List<OrderItemDto> orderItems = orderEntity
+            .getOrderItemEntities().stream()
+            .map(OrderServiceImpl::convertToDto)
+            .collect(Collectors.toList());
 
-        double totalCost = orderItems
-                .stream()
-                .mapToDouble(x -> x.getPrice().doubleValue())
-                .sum();
+        double totalCost = orderItems.stream()
+            .mapToDouble(x -> x.getPrice().doubleValue())
+            .sum();
 
         return new OrderDto(
-                orderEntity.getId(),
-                orderEntity.getOrderStatus(),
-                orderEntity.getUserName(),
-                BigDecimal.valueOf(totalCost),
-                orderItems);
+            orderEntity.getId(),
+            orderEntity.getOrderStatus(),
+            orderEntity.getUserName(),
+            BigDecimal.valueOf(totalCost),
+            orderItems);
+    }
+
+    private static OrderItemDto convertToDto(OrderItemEntity orderItemEntity){
+        return new OrderItemDto(
+            orderItemEntity.getId(),
+            orderItemEntity.getAmount(),
+            orderItemEntity.getName(),
+            orderItemEntity.getPrice());
     }
 }
