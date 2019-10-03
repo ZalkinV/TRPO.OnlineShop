@@ -8,6 +8,8 @@ import com.microservices.order.entity.OrderItemEntity;
 import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.repository.OrderRepository;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Autowired
     private ModelMapper mapper;
@@ -30,6 +34,8 @@ public class OrderServiceImpl implements OrderService {
             .findAll().stream()
             .map(OrderServiceImpl::convertToDto)
             .collect(Collectors.toList());
+
+        logger.info("Item was added successfully");
 
         return orders;
     }
@@ -53,7 +59,9 @@ public class OrderServiceImpl implements OrderService {
         int newAmount = orderItem.getAmount() + additionDto.getAmount();
             orderItem.setAmount(newAmount);
 
+        logger.info("Adding item (id={}) to order (id={})", orderItem.getItemId(), orderId);
         OrderEntity savedOrder = orderRepository.save(order);
+        logger.info("Item was added successfully");
 
         return OrderServiceImpl.convertToDto(savedOrder);
     }
@@ -87,8 +95,10 @@ public class OrderServiceImpl implements OrderService {
             default:
                 throw new IllegalStateException(wrongStatusChangeMessage);
         }
+        order.setOrderStatus(orderStatus);
 
         OrderEntity savedOrder = orderRepository.save(order);
+        logger.info("Order (id={}) status was changed: {} -> {}", orderId, orderStatus, newOrderStatus);
 
         return OrderServiceImpl.convertToDto(savedOrder);
     }
