@@ -36,14 +36,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDto getOrderById(int orderId){
-        OrderEntity orderEntity = getExistedOrder(orderId);
+        OrderEntity orderEntity = this.getOrder(orderId);
 
         return OrderServiceImpl.convertToDto(orderEntity);
     }
 
     @Override
     public OrderDto addItemToOrder(int orderId, ItemChangeAmountDto additionDto){
-        OrderEntity order = this.getExistedOrder(orderId);
+        OrderEntity order = this.getOrder(orderId);
 
         OrderItemEntity orderItem = order.getOrderItemEntities().stream()
             .filter(oie -> oie.getItemId() == additionDto.getItemId())
@@ -60,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDto setOrderStatus(int orderId, OrderStatus orderStatus){
-        OrderEntity order = getExistedOrder(orderId);
+        OrderEntity order = this.getOrder(orderId);
 
         order.setOrderStatus(orderStatus);
         OrderEntity savedOrder = orderRepository.save(order);
@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         throw new IllegalArgumentException("I need help of item-service to create new order, but I cannot communicate with it :(");
     }
 
-    private OrderEntity getExistedOrder(int orderId){
+    private OrderEntity getOrder(int orderId){
         return orderRepository.findById(orderId)
             .orElseThrow(() -> new IllegalArgumentException("There is no order with id=" + orderId));
     }
