@@ -95,10 +95,10 @@ public class OrderServiceImpl implements OrderService {
             default:
                 throw new IllegalStateException(wrongStatusChangeMessage);
         }
-        order.setOrderStatus(orderStatus);
+        order.setOrderStatus(newOrderStatus);
 
         OrderEntity savedOrder = orderRepository.save(order);
-        logger.info("Order (id={}) status was changed: {} -> {}", orderId, orderStatus, newOrderStatus);
+        logger.info("Order (id={}) status was changed: {} -> {}", orderId, orderStatus, savedOrder.getOrderStatus());
 
         return OrderServiceImpl.convertToDto(savedOrder);
     }
