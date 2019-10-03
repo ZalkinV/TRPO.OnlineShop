@@ -2,6 +2,7 @@ package com.microservices.order.controller;
 
 import com.microservices.order.dto.ItemChangeAmountDto;
 import com.microservices.order.dto.OrderDto;
+import com.microservices.order.dto.UserDetailsDto;
 import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,5 +50,14 @@ public class OrderController {
         @PathVariable OrderStatus orderStatus) {
 
         return orderService.setOrderStatus(orderId, orderStatus);
+    }
+
+    @PutMapping(value = "{orderId}/payment")
+    public OrderDto performPayment(
+        @PathVariable int orderId,
+        @RequestBody UserDetailsDto userDetailsDto){
+
+        orderService.getOrderById(orderId);
+        throw new IllegalArgumentException("I need help of payment-service to perform payment, but I cannot communicate with it :(");
     }
 }
