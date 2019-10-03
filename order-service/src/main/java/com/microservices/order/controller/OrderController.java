@@ -8,16 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("order")
+@RequestMapping("api/orders")
 public class OrderController {
-    private OrderService orderService;
-
     @Autowired
-    public OrderController(OrderService orderService){
-        this.orderService = orderService;
-    }
+    private OrderService orderService;
 
     @GetMapping
     public List<OrderDto> getAllOrders(){
@@ -25,18 +22,32 @@ public class OrderController {
     }
 
     @GetMapping(value = "{orderId}")
-    public OrderDto getOrderById(@PathVariable int orderId){
+    public OrderDto getOrderById(
+        @PathVariable int orderId){
+
         return orderService.getOrderById(orderId);
     }
 
-    @PostMapping(value = "{orderId}/item")
-    public OrderDto addItemToOrder(@PathVariable int orderId, @RequestBody ItemChangeAmountDto additionDto) {
-        return orderService.addItemToOrder(orderId, additionDto);
+    @PostMapping(value = "{orderId}/adding")
+    public OrderDto addItemToOrder(
+        @PathVariable(required = false) Optional<String> orderIdString,
+        @RequestBody ItemChangeAmountDto additionDto) {
+
+        OrderDto resultOrder;
+        if (orderIdString.isPresent()) {
+            int orderId = Integer.parseInt(orderIdString.get());
+            resultOrder = orderService.addItemToOrder(orderId, additionDto);
+        } else {
+            resultOrder = orderService.createNewOrder(additionDto);
+        }
+        return resultOrder;
     }
 
     @PutMapping(value = "{orderId}/status/{orderStatus}")
-    public OrderDto setOrderStatus(@PathVariable int orderId, @PathVariable OrderStatus orderStatus) {
+    public OrderDto setOrderStatus(
+        @PathVariable int orderId,
+        @PathVariable OrderStatus orderStatus) {
+
         return orderService.setOrderStatus(orderId, orderStatus);
     }
-
 }
