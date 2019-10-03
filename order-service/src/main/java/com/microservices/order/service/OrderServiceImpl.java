@@ -59,10 +59,35 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDto setOrderStatus(int orderId, OrderStatus orderStatus){
+    public OrderDto setOrderStatus(int orderId, OrderStatus newOrderStatus){
         OrderEntity order = this.getOrder(orderId);
+        OrderStatus orderStatus = order.getOrderStatus();
 
-        order.setOrderStatus(orderStatus);
+        String wrongStatusChangeMessage = "Status of order (id=" + orderId + ") cannot be changed from " + orderStatus + " to " + newOrderStatus;
+        switch (newOrderStatus)
+        {
+            case PAID:
+            case FAILED: {
+                if (orderStatus == OrderStatus.COLLECTING)
+                    order.setOrderStatus(newOrderStatus);
+                else
+                    throw new IllegalStateException(wrongStatusChangeMessage);
+                break;
+            }
+
+            case COMPLETE:
+            case CANCELED: {
+                if (orderStatus == OrderStatus.PAID)
+                    order.setOrderStatus(newOrderStatus);
+                else
+                    throw new IllegalStateException(wrongStatusChangeMessage);
+                break;
+            }
+
+            default:
+                throw new IllegalStateException(wrongStatusChangeMessage);
+        }
+
         OrderEntity savedOrder = orderRepository.save(order);
 
         return OrderServiceImpl.convertToDto(savedOrder);
