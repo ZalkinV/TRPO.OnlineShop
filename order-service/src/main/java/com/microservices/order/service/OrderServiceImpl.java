@@ -10,12 +10,9 @@ import com.microservices.order.repository.OrderRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,22 +43,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDto addItemToOrder(int orderId, ItemChangeAmountDto additionDto){
-        Optional<OrderEntity> orderOptional = orderRepository.findById(orderId);
+        OrderEntity order = this.getExistedOrder(orderId);
 
-        if (orderOptional.isPresent()){
-            OrderItemEntity orderItem = orderOptional.get()
-                .getOrderItemEntities().stream()
-                .filter(oie -> oie.getItemId() == additionDto.getItemId())
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("There is no orderItem with itemId=" + additionDto.getItemId() + " in order with id=" + orderId));
+        OrderItemEntity orderItem = order.getOrderItemEntities().stream()
+            .filter(oie -> oie.getItemId() == additionDto.getItemId())
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("There is no orderItem with itemId=" + additionDto.getItemId() + " in order with id=" + orderId));
 
-            int newAmount = orderItem.getAmount() + additionDto.getAmount();
+        int newAmount = orderItem.getAmount() + additionDto.getAmount();
             orderItem.setAmount(newAmount);
-        } else {
-            throw new NotImplementedException();
-        }
 
-        OrderEntity savedOrder = orderRepository.save(orderOptional.get());
+        OrderEntity savedOrder = orderRepository.save(order);
 
         return OrderServiceImpl.convertToDto(savedOrder);
     }
@@ -74,6 +66,10 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity savedOrder = orderRepository.save(order);
 
         return OrderServiceImpl.convertToDto(savedOrder);
+    }
+
+    public OrderDto createNewOrder(ItemChangeAmountDto additionDto) {
+        throw new IllegalArgumentException("I need help of item-service to create new order, but I cannot communicate with it :(");
     }
 
     private OrderEntity getExistedOrder(int orderId){
