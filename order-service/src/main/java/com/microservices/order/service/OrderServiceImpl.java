@@ -8,6 +8,8 @@ import com.microservices.order.entity.OrderItemEntity;
 import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.repository.OrderRepository;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
 @Service
 public class OrderServiceImpl implements OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
+
     @Autowired
     private ModelMapper mapper;
 
@@ -33,6 +37,8 @@ public class OrderServiceImpl implements OrderService {
             .findAll().stream()
             .map(OrderServiceImpl::convertToDto)
             .collect(Collectors.toList());
+
+        logger.info("Item was added successfully");
 
         return orders;
     }
@@ -61,7 +67,9 @@ public class OrderServiceImpl implements OrderService {
             throw new NotImplementedException();
         }
 
+        logger.info("Adding item to order with id = {}", orderId);
         OrderEntity savedOrder = orderRepository.save(orderOptional.get());
+        logger.info("Item was added successfully");
 
         return OrderServiceImpl.convertToDto(savedOrder);
     }
@@ -71,7 +79,9 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity order = getExistedOrder(orderId);
 
         order.setOrderStatus(orderStatus);
+
         OrderEntity savedOrder = orderRepository.save(order);
+        logger.info("Order status was changed to {}", orderStatus);
 
         return OrderServiceImpl.convertToDto(savedOrder);
     }
