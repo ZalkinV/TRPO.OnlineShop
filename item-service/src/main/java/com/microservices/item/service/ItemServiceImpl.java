@@ -62,6 +62,10 @@ public class ItemServiceImpl implements ItemService{
     @Override
     public ItemDto decreaseAmount(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
+
+        if (amount > item.getAvailableAmount()) {
+            throw new RuntimeException("Amount can not be negative");
+        }
         item.setAvailableAmount(item.getAvailableAmount() - amount);
         logger.info("item with id = {} amount decreased by {}", item.getEntityId(), amount);
         return convertToItemDto(itemRepository.save(item));

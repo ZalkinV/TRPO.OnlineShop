@@ -25,7 +25,7 @@ public class ItemEntity {
     @DecimalMin("1.00")
     private BigDecimal price;
     @NotNull(message = "Please provide an amount")
-    @DecimalMin("1.00")
+    @DecimalMin("0.00")
     private Long availableAmount;
 
     public ItemEntity(String name, BigDecimal price, Long availableAmount) {
