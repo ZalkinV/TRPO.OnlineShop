@@ -1,5 +1,6 @@
 package com.microservices.payment.service;
 
+import com.microservices.payment.dto.PaymentCreationDto;
 import com.microservices.payment.dto.PaymentDto;
 import com.microservices.payment.entity.PaymentEntity;
 import com.microservices.payment.entity.PaymentStatus;
@@ -18,6 +19,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository) {
         this.paymentRepository = paymentRepository;
+    }
+
+    @Override
+    public PaymentDto createPayment(PaymentCreationDto paymentDto) {
+        PaymentEntity payment = paymentRepository.save(
+                new PaymentEntity(paymentDto.getOrderId())
+        );
+
+        logger.info("Payment with id: {} for orderId: {} is {}", payment.getId(), payment.getOrderId(), payment.getStatus());
+        return payment.toPaymentDto();
     }
 
     @Override
