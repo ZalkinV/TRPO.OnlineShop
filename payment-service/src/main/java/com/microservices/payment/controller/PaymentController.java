@@ -19,8 +19,8 @@ public class PaymentController {
     }
 
     @PostMapping
-    public PaymentDto createPayment(@Valid @RequestBody PaymentCreationDto paymentCreationDto) {
-        return paymentService.createPayment(paymentCreationDto);
+    public PaymentDto performPayment(@Valid @RequestBody PaymentCreationDto paymentCreationDto) {
+        return paymentService.performPayment(paymentCreationDto);
     }
 
     @GetMapping(value = "{payment_id}")
@@ -33,13 +33,9 @@ public class PaymentController {
         return paymentService.getPaymentByOrderId(order_id);
     }
 
-    @PutMapping(value = "{payment_id}/perform")
-    public PaymentDto performPayment(@PathVariable int payment_id) {
-        return paymentService.performPayment(payment_id);
-    }
-
     @PutMapping(value = "{payment_id}/cancel")
     public PaymentDto cancelPayment(@PathVariable int payment_id) {
         return paymentService.cancelPayment(payment_id);
     }
+
 }
