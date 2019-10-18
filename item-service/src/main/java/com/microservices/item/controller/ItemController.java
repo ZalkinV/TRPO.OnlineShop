@@ -3,14 +3,13 @@ package com.microservices.item.controller;
 
 import com.microservices.item.dto.ItemCreationDto;
 import com.microservices.item.dto.ItemDto;
-import com.microservices.item.entity.ItemEntity;
+import com.microservices.item.dto.ItemToReturnDto;
 import com.microservices.item.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/item")
@@ -22,13 +21,13 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> list() {
-        return itemService.list();
+    public List<ItemDto> getItems() {
+        return itemService.getItems();
     }
 
     @GetMapping("{id}")
-    public ItemDto getOne(@PathVariable long id){
-        return itemService.getOne(id);
+    public ItemDto getById(@PathVariable long id){
+        return itemService.getById(id);
     }
 
     @PostMapping
@@ -36,14 +35,20 @@ public class ItemController {
         return itemService.create(itemCreationDto);
     }
 
-    @PutMapping("{id}/increasing/{amount}")
-    public ItemDto increaseAmount(@PathVariable long amount, @PathVariable long id) {
-        return itemService.increaseAmount(id, amount);
+    @PutMapping("{id}/increase/{amount}")
+    public ItemDto increaseById(@PathVariable long amount, @PathVariable long id) {
+        return itemService.increaseById(id, amount);
     }
 
-    @PutMapping("{id}/decreasing/{amount}")
-    public ItemDto decreaseAmount(@PathVariable long amount, @PathVariable long id) {
-        return itemService.decreaseAmount(id, amount);
+    @PutMapping("return-items")
+    @ResponseBody
+    public String returnToItem(@Valid @RequestBody List<ItemToReturnDto> items) {
+        return itemService.returnToItem(items);
+    }
+
+    @PutMapping("{id}/decrease/{amount}")
+    public ItemDto decreaseById(@PathVariable long amount, @PathVariable long id) {
+        return itemService.decreaseById(id, amount);
     }
 
 }

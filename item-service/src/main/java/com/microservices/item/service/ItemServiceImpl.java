@@ -2,6 +2,7 @@ package com.microservices.item.service;
 
 import com.microservices.item.dto.ItemCreationDto;
 import com.microservices.item.dto.ItemDto;
+import com.microservices.item.dto.ItemToReturnDto;
 import com.microservices.item.entity.ItemEntity;
 import com.microservices.item.repository.ItemRepository;
 import org.slf4j.Logger;
@@ -25,20 +26,20 @@ public class ItemServiceImpl implements ItemService{
     }
 
     @Override
-    public List<ItemDto> list() {
+    public List<ItemDto> getItems() {
 
         List<ItemDto> items = new ArrayList<>();
         itemRepository.findAll().forEach(item -> {
             items.add(convertToItemDto(item));
         });
-        logger.info("Returned list of all items");
+        logger.info("Returned getItems of all items");
         return items;
     }
 
     @Override
-    public ItemDto getOne(long id) {
+    public ItemDto getById(long id) {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
-        logger.info("Returned item with id = {}", item.getEntityId());
+        logger.info("Returned item with id = {}", item.getId());
         return convertToItemDto(item);
     }
 
@@ -46,37 +47,46 @@ public class ItemServiceImpl implements ItemService{
     public ItemDto create(ItemCreationDto itemCreationDto) {
         ItemEntity item = itemRepository.save(
                 new ItemEntity(itemCreationDto.getName(), itemCreationDto.getPrice(), itemCreationDto.getAmount()));
-        logger.info("Created item with id = {}", item.getEntityId());
-        return convertToItemDto(item)
-        ;
+        logger.info("Created item with id = {}", item.getId());
+        return convertToItemDto(item);
     }
 
     @Override
-    public ItemDto increaseAmount(long id, long amount) throws RuntimeException {
+    public ItemDto increaseById(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
-        item.setAvailableAmount(item.getAvailableAmount()+ amount);
-        logger.info("item with id = {} amount increased by {}", item.getEntityId(), amount);
+        item.setAmount(item.getAmount()+ amount);
+        logger.info("item with id = {} amount increased by {}", item.getId(), amount);
         return convertToItemDto(itemRepository.save(item));
     }
 
     @Override
-    public ItemDto decreaseAmount(long id, long amount) throws RuntimeException {
+    public String returnToItem(List<ItemToReturnDto> items) {
+        items.forEach(returnItem -> {
+            ItemEntity tempItem = itemRepository.findById(returnItem.getId()).orElseThrow(RuntimeException::new);
+            tempItem.setAmount(returnItem.getAmount() + tempItem.getAmount());
+            itemRepository.save(tempItem);
+        });
+        return "{\"success\":1}";
+    }
+
+    @Override
+    public ItemDto decreaseById(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
 
-        if (amount > item.getAvailableAmount()) {
+        if (amount > item.getAmount()) {
             throw new RuntimeException("Amount can not be negative");
         }
-        item.setAvailableAmount(item.getAvailableAmount() - amount);
-        logger.info("item with id = {} amount decreased by {}", item.getEntityId(), amount);
+        item.setAmount(item.getAmount() - amount);
+        logger.info("item with id = {} amount decreased by {}", item.getId(), amount);
         return convertToItemDto(itemRepository.save(item));
     }
 
     private ItemDto convertToItemDto(ItemEntity item) {
         return new ItemDto(
-                item.getEntityId(),
+                item.getId(),
                 item.getName(),
                 item.getPrice(),
-                item.getAvailableAmount()
+                item.getAmount()
         );
     }
 }

@@ -18,7 +18,7 @@ public class ItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long entityId;
+    private Long id;
     @NotEmpty(message = "please provide a name")
     private String name;
     @NotNull(message = "Please provide a price")
@@ -26,12 +26,12 @@ public class ItemEntity {
     private BigDecimal price;
     @NotNull(message = "Please provide an amount")
     @DecimalMin("0.00")
-    private Long availableAmount;
+    private Long amount;
 
-    public ItemEntity(String name, BigDecimal price, Long availableAmount) {
+    public ItemEntity(String name, BigDecimal price, Long amount) {
         this.name = name;
         this.price = price;
-        this.availableAmount = availableAmount;
+        this.amount = amount;
     }
 }
 
