@@ -22,12 +22,26 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDto createPayment(PaymentCreationDto paymentDto) {
-        PaymentEntity payment = paymentRepository.save(
-                new PaymentEntity(paymentDto.getOrderId())
-        );
+    public PaymentDto performPayment(PaymentCreationDto paymentDto) {
+        PaymentEntity payment;
 
-        logger.info("Payment with id: {} for orderId: {} is {}", payment.getId(), payment.getOrderId(), payment.getStatus());
+        switch(paymentDto.getCardAuthorizationInfo()) {
+            case AUTHORIZED:
+                payment = paymentRepository.save(
+                        new PaymentEntity(paymentDto.getOrderId(), PaymentStatus.PERFORMED)
+                );
+                logger.info("Payment with id: {} for orderId: {} is {}", payment.getId(), payment.getOrderId(), payment.getStatus());
+                break;
+
+            case UNAUTHORIZED:
+            default:
+                payment = paymentRepository.save(
+                        new PaymentEntity(paymentDto.getOrderId(), PaymentStatus.FAILED)
+                );
+                logger.info("Payment with id: {} for orderId: {} is {}", payment.getId(), payment.getOrderId(), payment.getStatus());
+                break;
+        }
+
         return payment.toPaymentDto();
     }
 
@@ -48,24 +62,15 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDto performPayment(int paymentId) {
-        PaymentEntity payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("No payment with id " + paymentId));
-
-        payment.setStatus(PaymentStatus.PERFORMED);
-
-        logger.info("Payment with id: {} performed", paymentId);
-        return payment.toPaymentDto();
-    }
-
-    @Override
     public PaymentDto cancelPayment(int paymentId) {
         PaymentEntity payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("No payment with id " + paymentId));
 
         payment.setStatus(PaymentStatus.CANCELED);
 
+        paymentRepository.save(payment);
         logger.info("Payment with id: {} canceled", paymentId);
         return payment.toPaymentDto();
     }
+
 }

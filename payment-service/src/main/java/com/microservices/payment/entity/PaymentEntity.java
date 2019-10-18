@@ -22,9 +22,9 @@ public class PaymentEntity {
     @Enumerated(value = EnumType.STRING)
     private PaymentStatus status;
 
-    public PaymentEntity(int orderId) {
+    public PaymentEntity(int orderId, PaymentStatus paymentStatus) {
         this.orderId = orderId;
-        this.status = PaymentStatus.PENDING;
+        this.status = paymentStatus;
     }
 
     public PaymentDto toPaymentDto() {

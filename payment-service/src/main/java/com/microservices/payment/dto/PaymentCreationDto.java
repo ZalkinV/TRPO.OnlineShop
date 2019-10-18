@@ -1,5 +1,6 @@
 package com.microservices.payment.dto;
 
+import com.microservices.payment.entity.CardAuthorizationInfo;
 import lombok.Getter;
 
 import javax.validation.Valid;
@@ -12,8 +13,13 @@ public class PaymentCreationDto {
     @Valid
     private Integer orderId;
 
-    @ConstructorProperties({"orderId"})
-    public PaymentCreationDto(int orderId) {
+    @NotNull
+    @Valid
+    private CardAuthorizationInfo cardAuthorizationInfo;
+
+    @ConstructorProperties({"orderId", "cardAuthorizationInfo"})
+    public PaymentCreationDto(int orderId, CardAuthorizationInfo cardAuthorizationInfo) {
+        this.cardAuthorizationInfo = cardAuthorizationInfo;
         this.orderId = orderId;
     }
 }
