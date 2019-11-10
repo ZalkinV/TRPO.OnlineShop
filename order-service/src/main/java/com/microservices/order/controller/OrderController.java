@@ -28,7 +28,11 @@ public class OrderController {
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
     private OrderService orderService;
+
 
     @GetMapping
     public List<OrderDto> getAllOrders(){
@@ -39,7 +43,6 @@ public class OrderController {
     public OrderDto getOrderById(
         @PathVariable int orderId){
 
-        testSend(orderId);
         return orderService.getOrderById(orderId);
     }
 
@@ -79,9 +82,6 @@ public class OrderController {
     public void handleMessage(String message) {
        logger.info(message);
     }
-
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
 
     public void testSend(int orderId) {
         rabbitTemplate.convertAndSend("exchange", "order", "I am able to send message with orderId =" + orderId);

@@ -15,31 +15,31 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfiguration {
 
     @Bean
-    public ConnectionFactory getConnectionFactory() {
+    public ConnectionFactory connectionFactory() {
         return new CachingConnectionFactory("localhost");
     }
 
     @Bean
-    public DirectExchange getDirectExchange() {
+    public DirectExchange directExchange() {
         return new DirectExchange("exchange");
     }
 
     @Bean
-    public Queue getOrderQueue() {
+    public Queue orderQueue() {
         return  new Queue("qorder");
     }
 
     @Bean
-    public Binding getBinding() {
-        DirectExchange exchange = getDirectExchange();
-        Queue queue = getOrderQueue();
+    public Binding binding() {
+        DirectExchange exchange = directExchange();
+        Queue orderQueue = orderQueue();
         String routingKey = "order";
-        return BindingBuilder.bind(queue).to(exchange).with(routingKey);
+        return BindingBuilder.bind(orderQueue).to(exchange).with(routingKey);
     }
 
     @Bean
-    public RabbitTemplate getRabbitTemplate() {
-        ConnectionFactory connectionFactory = getConnectionFactory();
+    public RabbitTemplate rabbitTemplate() {
+        ConnectionFactory connectionFactory = connectionFactory();
         return new RabbitTemplate(connectionFactory);
     }
 }
