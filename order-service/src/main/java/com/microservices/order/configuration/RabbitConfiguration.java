@@ -21,20 +21,27 @@ public class RabbitConfiguration {
 
     @Bean
     public DirectExchange directExchange() {
-        return new DirectExchange("exchange");
+        return new DirectExchange("directExchange");
     }
 
     @Bean
-    public Queue orderQueue() {
-        return  new Queue("qorder");
+    public Queue paymentQueue() {
+        return  new Queue("qpayment");
     }
 
     @Bean
-    public Binding binding() {
-        DirectExchange exchange = directExchange();
-        Queue orderQueue = orderQueue();
-        String routingKey = "order";
-        return BindingBuilder.bind(orderQueue).to(exchange).with(routingKey);
+    public Queue itemQueue() {
+        return new Queue("qitem");
+    }
+
+    @Bean
+    public Binding bindingPayment(DirectExchange directExchange, Queue paymentQueue) {
+        return BindingBuilder.bind(paymentQueue).to(directExchange).with("payment");
+    }
+
+    @Bean
+    public Binding bindItems(DirectExchange directExchange, Queue itemQueue) {
+        return BindingBuilder.bind(itemQueue).to(directExchange).with("item");
     }
 
     @Bean

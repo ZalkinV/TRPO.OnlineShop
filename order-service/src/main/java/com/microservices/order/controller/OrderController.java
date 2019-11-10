@@ -78,12 +78,11 @@ public class OrderController {
         throw new IllegalArgumentException("I need help of payment-service to perform payment, but I cannot communicate with it :(");
     }
 
-    @RabbitListener(queues = "qorder")
-    public void handleMessage(String message) {
-       logger.info(message);
+    public void cancelPayment(int orderId) {
+        rabbitTemplate.convertAndSend("directExchange", "payment", "Cancel payment with orderId=" + orderId);
     }
 
-    public void testSend(int orderId) {
-        rabbitTemplate.convertAndSend("exchange", "order", "I am able to send message with orderId =" + orderId);
+    public void returnItems(int orderId) {
+        rabbitTemplate.convertAndSend("directExchange", "item", "Return items with orderId=" + orderId);
     }
 }
