@@ -42,13 +42,15 @@ public class PaymentController {
     }
 
     @PutMapping(value = "{payment_id}/cancel")
-    public PaymentDto cancelPayment(@PathVariable int payment_id) {
+    public PaymentDto cancelPaymentByPaymentId(@PathVariable int payment_id) {
         return paymentService.cancelPayment(payment_id);
     }
 
 
     @RabbitListener(queues = "qpayment")
-    public void cancelPayment(Message message) {
-        logger.info("*********************" + message.toString());
+    public void cancelPaymentByOrderId(Message message) {
+        String orderIdString = new String(message.getBody());
+        int orderId = Integer.parseInt(orderIdString);
+        logger.info("Received order id to cancel payment. orderId=" + orderId);
     }
 }

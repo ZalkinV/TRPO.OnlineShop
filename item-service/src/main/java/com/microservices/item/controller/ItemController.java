@@ -57,7 +57,7 @@ public class ItemController {
 
     @RabbitListener(queues = "qitem")
     public void returnItems(List<OrderItemDto> items) {
-        logger.info("********************* Received items count=" + items.size());
+        logger.info("Received items count=" + items.size());
     }
 
 }
