@@ -2,19 +2,16 @@ package com.microservices.order.controller;
 
 import com.microservices.order.dto.ItemChangeAmountDto;
 import com.microservices.order.dto.OrderDto;
+import com.microservices.order.dto.OrderItemDto;
 import com.microservices.order.dto.UserDetailsDto;
 import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.service.OrderService;
-import com.microservices.order.service.OrderServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 
 import java.util.List;
@@ -25,10 +22,15 @@ import java.util.Optional;
 @RequestMapping("api/orders")
 public class OrderController {
 
+    @Autowired
+    private OrderService orderService;
+
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     @Autowired
-    private OrderService orderService;
+    private RabbitTemplate rabbitTemplate;
+
+
 
     @GetMapping
     public List<OrderDto> getAllOrders(){
@@ -39,7 +41,6 @@ public class OrderController {
     public OrderDto getOrderById(
         @PathVariable int orderId){
 
-        testSend(orderId);
         return orderService.getOrderById(orderId);
     }
 
@@ -63,7 +64,14 @@ public class OrderController {
         @PathVariable int orderId,
         @PathVariable OrderStatus orderStatus) {
 
-        return orderService.setOrderStatus(orderId, orderStatus);
+        OrderDto orderDto = orderService.setOrderStatus(orderId, orderStatus);
+        if (orderStatus == OrderStatus.CANCELED) {
+            List<OrderItemDto> itemsToReturn = orderDto.getItems();
+            returnItems(itemsToReturn);
+            cancelPayment(orderId);
+        }
+
+        return orderDto;
     }
 
     @PutMapping(value = "{orderId}/payment")
@@ -75,15 +83,13 @@ public class OrderController {
         throw new IllegalArgumentException("I need help of payment-service to perform payment, but I cannot communicate with it :(");
     }
 
-    @RabbitListener(queues = "qorder")
-    public void handleMessage(String message) {
-       logger.info(message);
+    public void cancelPayment(int orderId) {
+        rabbitTemplate.convertAndSend("directExchange", "payment", orderId);
+        logger.info("Send message to payment with orderId=" + orderId);
     }
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    public void testSend(int orderId) {
-        rabbitTemplate.convertAndSend("exchange", "order", "I am able to send message with orderId =" + orderId);
+    public void returnItems(List<OrderItemDto> items) {
+        rabbitTemplate.convertAndSend("directExchange", "item", items);
+        logger.info("Send message to item with items count=" + items.size());
     }
 }

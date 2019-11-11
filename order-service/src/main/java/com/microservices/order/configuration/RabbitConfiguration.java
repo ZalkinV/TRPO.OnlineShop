@@ -7,6 +7,8 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,31 +17,46 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfiguration {
 
     @Bean
-    public ConnectionFactory getConnectionFactory() {
+    public ConnectionFactory connectionFactory() {
         return new CachingConnectionFactory("localhost");
     }
 
     @Bean
-    public DirectExchange getDirectExchange() {
-        return new DirectExchange("exchange");
+    public DirectExchange directExchange() {
+        return new DirectExchange("directExchange");
     }
 
     @Bean
-    public Queue getOrderQueue() {
-        return  new Queue("qorder");
+    public Queue paymentQueue() {
+        return  new Queue("qpayment");
     }
 
     @Bean
-    public Binding getBinding() {
-        DirectExchange exchange = getDirectExchange();
-        Queue queue = getOrderQueue();
-        String routingKey = "order";
-        return BindingBuilder.bind(queue).to(exchange).with(routingKey);
+    public Queue itemQueue() {
+        return new Queue("qitem");
     }
 
     @Bean
-    public RabbitTemplate getRabbitTemplate() {
-        ConnectionFactory connectionFactory = getConnectionFactory();
-        return new RabbitTemplate(connectionFactory);
+    public Binding bindingPayment(DirectExchange directExchange, Queue paymentQueue) {
+        return BindingBuilder.bind(paymentQueue).to(directExchange).with("payment");
+    }
+
+    @Bean
+    public Binding bindItems(DirectExchange directExchange, Queue itemQueue) {
+        return BindingBuilder.bind(itemQueue).to(directExchange).with("item");
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate() {
+        ConnectionFactory connectionFactory = connectionFactory();
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
+
+        return rabbitTemplate;
     }
 }
