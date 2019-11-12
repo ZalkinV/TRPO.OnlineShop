@@ -62,14 +62,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDto cancelPayment(int paymentId) {
-        PaymentEntity payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("No payment with id " + paymentId));
+    public PaymentDto cancelPayment(int orderId) {
+        PaymentEntity payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("No payment with orderId " + orderId));
 
         payment.setStatus(PaymentStatus.CANCELED);
 
         paymentRepository.save(payment);
-        logger.info("Payment with id: {} canceled", paymentId);
+        logger.info("Payment with orderId: {} canceled", orderId);
         return payment.toPaymentDto();
     }
 

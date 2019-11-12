@@ -11,5 +11,5 @@ public interface PaymentService {
 
     PaymentDto getPaymentByOrderId(int orderId);
 
-    PaymentDto cancelPayment(int paymentId);
+    PaymentDto cancelPayment(int orderId);
 }
