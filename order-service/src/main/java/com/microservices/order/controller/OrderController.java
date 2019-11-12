@@ -1,19 +1,18 @@
 package com.microservices.order.controller;
 
-import com.microservices.order.dto.ItemChangeAmountDto;
-import com.microservices.order.dto.OrderDto;
-import com.microservices.order.dto.OrderItemDto;
-import com.microservices.order.dto.UserDetailsDto;
+import com.microservices.order.dto.*;
 import com.microservices.order.entity.OrderStatus;
 import com.microservices.order.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+import org.springframework.web.client.RestTemplate;
 
-
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +29,8 @@ public class OrderController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-
+    @Autowired
+    private RestTemplate restTemplate;
 
     @GetMapping
     public List<OrderDto> getAllOrders(){
@@ -79,8 +79,28 @@ public class OrderController {
         @PathVariable int orderId,
         @RequestBody UserDetailsDto userDetailsDto){
 
-        orderService.getOrderById(orderId);
-        throw new IllegalArgumentException("I need help of payment-service to perform payment, but I cannot communicate with it :(");
+        OrderDto orderDto = orderService.getOrderById(orderId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<PaymentCreationDto> paymentCreationDtoHttpEntity = new HttpEntity<>(
+                new PaymentCreationDto(orderId, userDetailsDto.getCardAuthorizationInfo()), headers);
+
+        ResponseEntity<PaymentDto> result = restTemplate.exchange("http://localhost:8082/payment",
+                HttpMethod.POST, paymentCreationDtoHttpEntity, PaymentDto.class);
+
+        if (result.getStatusCode() == HttpStatus.OK) {
+            PaymentDto paymentDto = result.getBody();
+            if (paymentDto.getStatus() == PaymentStatus.PERFORMED) {
+                orderDto = orderService.setOrderStatus(orderId, OrderStatus.PAID);
+            } else if (paymentDto.getStatus() == PaymentStatus.FAILED) {
+                orderDto = orderService.setOrderStatus(orderId, OrderStatus.FAILED);
+            }
+        } else {
+            throw new IllegalArgumentException("Something went wrong in payment service. HttpStatus code: " + result.getStatusCode());
+        }
+
+        return orderDto;
     }
 
     public void cancelPayment(int orderId) {
