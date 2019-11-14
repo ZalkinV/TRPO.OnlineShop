@@ -44,19 +44,31 @@ public class OrderController {
         return orderService.getOrderById(orderId);
     }
 
-    @PostMapping(value = "{orderId}/adding")
+    @PostMapping(value = {"{orderId}/adding", "/adding"})
     public OrderDto addItemToOrder(
-        @PathVariable(required = false) Optional<String> orderIdString,
+        @PathVariable(required = false) Optional<Integer> orderId,
         @RequestBody ItemChangeAmountDto additionDto) {
 
-        OrderDto resultOrder;
-        if (orderIdString.isPresent()) {
-            int orderId = Integer.parseInt(orderIdString.get());
-            resultOrder = orderService.addItemToOrder(orderId, additionDto);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity <String> entity = new HttpEntity<>(headers);
+        int id = additionDto.getItemId();
+        int amount = additionDto.getAmount();
+
+        ResponseEntity<String> result = restTemplate.exchange("http://localhost:8083/item/" + id + "/decreasing/" + amount,
+                HttpMethod.PUT, entity, String.class);
+
+        if (result.getStatusCode() == HttpStatus.OK) {
+            OrderDto resultOrder;
+            if (orderId.isPresent()) {
+                resultOrder = orderService.addItemToOrder(orderId.get(), additionDto);
+            } else {
+                resultOrder = orderService.createNewOrder(additionDto);
+            }
+            return resultOrder;
         } else {
-            resultOrder = orderService.createNewOrder(additionDto);
+            throw new IllegalArgumentException("Something went wrong in item service. HttpStatus code: " + result.getStatusCode());
         }
-        return resultOrder;
     }
 
     @PutMapping(value = "{orderId}/status/{orderStatus}")
