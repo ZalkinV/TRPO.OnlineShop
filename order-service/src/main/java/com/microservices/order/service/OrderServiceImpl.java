@@ -1,6 +1,7 @@
 package com.microservices.order.service;
 
 import com.microservices.order.dto.ItemChangeAmountDto;
+import com.microservices.order.dto.ItemDto;
 import com.microservices.order.dto.OrderDto;
 import com.microservices.order.dto.OrderItemDto;
 import com.microservices.order.entity.OrderEntity;
@@ -11,10 +12,14 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +32,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Override
     public List<OrderDto> getAllOrders(){
@@ -51,13 +59,19 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto addItemToOrder(int orderId, ItemChangeAmountDto additionDto){
         OrderEntity order = this.getOrder(orderId);
 
-        OrderItemEntity orderItem = order.getOrderItemEntities().stream()
+        Optional<OrderItemEntity> optionalOrderItem = order.getOrderItemEntities().stream()
             .filter(oie -> oie.getItemId() == additionDto.getItemId())
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("There is no orderItem with itemId=" + additionDto.getItemId() + " in order with id=" + orderId));
+            .findFirst();
 
-        int newAmount = orderItem.getAmount() + additionDto.getAmount();
+        OrderItemEntity orderItem;
+        if (optionalOrderItem.isPresent()) {
+            orderItem = optionalOrderItem.get();
+            int newAmount = orderItem.getAmount() + additionDto.getAmount();
             orderItem.setAmount(newAmount);
+        } else {
+            orderItem = createNewOrderItemEntity(order, additionDto);
+            order.getOrderItemEntities().add(orderItem);
+        }
 
         logger.info("Adding item (id={}) to order (id={})", orderItem.getItemId(), orderId);
         OrderEntity savedOrder = orderRepository.save(order);
@@ -103,8 +117,39 @@ public class OrderServiceImpl implements OrderService {
         return OrderServiceImpl.convertToDto(savedOrder);
     }
 
+    private OrderItemEntity createNewOrderItemEntity(OrderEntity order, ItemChangeAmountDto additionDto) {
+        OrderItemEntity orderItemEntity = new OrderItemEntity();
+        int id = additionDto.getItemId();
+        orderItemEntity.setAmount(additionDto.getAmount());
+        orderItemEntity.setItemId(id);
+        orderItemEntity.setOrderEntity(order);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<ItemDto> result = restTemplate.exchange("http://localhost:8083/item/" + id,
+                HttpMethod.GET, entity, ItemDto.class);
+
+        if (result.getStatusCode() == HttpStatus.OK) {
+            ItemDto itemDto = result.getBody();
+            orderItemEntity.setName(itemDto.getName());
+            orderItemEntity.setPrice(itemDto.getPrice());
+
+            return orderItemEntity;
+        } else {
+            throw new IllegalArgumentException("Something went wrong in item service. HttpStatus code: " + result.getStatusCode());
+        }
+    }
+
     public OrderDto createNewOrder(ItemChangeAmountDto additionDto) {
-        throw new IllegalArgumentException("I need help of item-service to create new order, but I cannot communicate with it :(");
+        OrderEntity order = new OrderEntity(additionDto.getUsername());
+        OrderItemEntity orderItem = createNewOrderItemEntity(order, additionDto);
+        order.getOrderItemEntities().add(orderItem);
+
+        OrderEntity savedOrder = orderRepository.save(order);
+        logger.info("Item (id={}) was added successfully to order (id={})", orderItem.getItemId(), order.getId());
+
+        return OrderServiceImpl.convertToDto(savedOrder);
     }
 
     private OrderEntity getOrder(int orderId){
@@ -119,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
             .collect(Collectors.toList());
 
         double totalCost = orderItems.stream()
-            .mapToDouble(x -> x.getPrice().doubleValue())
+            .mapToDouble(x -> x.getPrice().doubleValue() * x.getAmount())
             .sum();
 
         return new OrderDto(
