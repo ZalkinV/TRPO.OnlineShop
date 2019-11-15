@@ -2,6 +2,7 @@ package com.microservices.item.service;
 
 import com.microservices.item.dto.ItemCreationDto;
 import com.microservices.item.dto.ItemDto;
+import com.microservices.item.dto.OrderItemDto;
 import com.microservices.item.entity.ItemEntity;
 import com.microservices.item.repository.ItemRepository;
 import org.slf4j.Logger;
@@ -25,18 +26,18 @@ public class ItemServiceImpl implements ItemService{
     }
 
     @Override
-    public List<ItemDto> list() {
+    public List<ItemDto> getItems() {
 
         List<ItemDto> items = new ArrayList<>();
         itemRepository.findAll().forEach(item -> {
             items.add(convertToItemDto(item));
         });
-        logger.info("Returned list of all items");
+        logger.info("Returned getItems of all items");
         return items;
     }
 
     @Override
-    public ItemDto getOne(long id) {
+    public ItemDto getById(long id) {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
         logger.info("Returned item with id = {}", item.getEntityId());
         return convertToItemDto(item);
@@ -52,7 +53,7 @@ public class ItemServiceImpl implements ItemService{
     }
 
     @Override
-    public ItemDto increaseAmount(long id, long amount) throws RuntimeException {
+    public ItemDto increaseById(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
         item.setAvailableAmount(item.getAvailableAmount()+ amount);
         logger.info("item with id = {} amount increased by {}", item.getEntityId(), amount);
@@ -60,7 +61,7 @@ public class ItemServiceImpl implements ItemService{
     }
 
     @Override
-    public ItemDto decreaseAmount(long id, long amount) throws RuntimeException {
+    public ItemDto decreaseById(long id, long amount) throws RuntimeException {
         ItemEntity item = itemRepository.findById(id).orElseThrow(RuntimeException::new);
 
         if (amount > item.getAvailableAmount()) {
@@ -69,6 +70,13 @@ public class ItemServiceImpl implements ItemService{
         item.setAvailableAmount(item.getAvailableAmount() - amount);
         logger.info("item with id = {} amount decreased by {}", item.getEntityId(), amount);
         return convertToItemDto(itemRepository.save(item));
+    }
+
+    @Override
+    public void returnItems(List<OrderItemDto> items) {
+        items.forEach(item -> {
+            increaseById(item.getItemId(), item.getAmount());
+        });
     }
 
     private ItemDto convertToItemDto(ItemEntity item) {

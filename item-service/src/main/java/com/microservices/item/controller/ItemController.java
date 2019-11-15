@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @EnableRabbit
 @RestController
@@ -31,13 +30,13 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> list() {
-        return itemService.list();
+    public List<ItemDto> getItems() {
+        return itemService.getItems();
     }
 
     @GetMapping("{id}")
-    public ItemDto getOne(@PathVariable long id){
-        return itemService.getOne(id);
+    public ItemDto getById(@PathVariable long id){
+        return itemService.getById(id);
     }
 
     @PostMapping
@@ -46,17 +45,18 @@ public class ItemController {
     }
 
     @PutMapping("{id}/increasing/{amount}")
-    public ItemDto increaseAmount(@PathVariable long amount, @PathVariable long id) {
-        return itemService.increaseAmount(id, amount);
+    public ItemDto increaseById(@PathVariable long amount, @PathVariable long id) {
+        return itemService.increaseById(id, amount);
     }
 
     @PutMapping("{id}/decreasing/{amount}")
-    public ItemDto decreaseAmount(@PathVariable long amount, @PathVariable long id) {
-        return itemService.decreaseAmount(id, amount);
+    public ItemDto decreaseById(@PathVariable long amount, @PathVariable long id) {
+        return itemService.decreaseById(id, amount);
     }
 
     @RabbitListener(queues = "qitem")
     public void returnItems(List<OrderItemDto> items) {
+        itemService.returnItems(items);
         logger.info("Received items count=" + items.size());
     }
 
