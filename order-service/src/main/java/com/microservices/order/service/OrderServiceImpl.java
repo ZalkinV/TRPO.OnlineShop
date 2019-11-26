@@ -7,14 +7,13 @@ import com.microservices.order.dto.OrderItemDto;
 import com.microservices.order.entity.OrderEntity;
 import com.microservices.order.entity.OrderItemEntity;
 import com.microservices.order.entity.OrderStatus;
+import com.microservices.order.feign.ItemServiceFeignClient;
 import com.microservices.order.repository.OrderRepository;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -32,9 +31,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
 
     @Override
     public List<OrderDto> getAllOrders(){
@@ -117,6 +113,9 @@ public class OrderServiceImpl implements OrderService {
         return OrderServiceImpl.convertToDto(savedOrder);
     }
 
+    @Autowired
+    ItemServiceFeignClient itemServiceFeignClient;
+
     private OrderItemEntity createNewOrderItemEntity(OrderEntity order, ItemChangeAmountDto additionDto) {
         OrderItemEntity orderItemEntity = new OrderItemEntity();
         int id = additionDto.getItemId();
@@ -124,21 +123,11 @@ public class OrderServiceImpl implements OrderService {
         orderItemEntity.setItemId(id);
         orderItemEntity.setOrderEntity(order);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<ItemDto> result = restTemplate.exchange("http://localhost:8083/item/" + id,
-                HttpMethod.GET, entity, ItemDto.class);
+        ItemDto itemDto = itemServiceFeignClient.getById(id);
+        orderItemEntity.setName(itemDto.getName());
+        orderItemEntity.setPrice(itemDto.getPrice());
 
-        if (result.getStatusCode() == HttpStatus.OK) {
-            ItemDto itemDto = result.getBody();
-            orderItemEntity.setName(itemDto.getName());
-            orderItemEntity.setPrice(itemDto.getPrice());
-
-            return orderItemEntity;
-        } else {
-            throw new IllegalArgumentException("Something went wrong in item service. HttpStatus code: " + result.getStatusCode());
-        }
+        return orderItemEntity;
     }
 
     public OrderDto createNewOrder(ItemChangeAmountDto additionDto) {
