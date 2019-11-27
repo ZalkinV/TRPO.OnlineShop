@@ -17,7 +17,6 @@ import java.util.Optional;
 
 @EnableRabbit
 @RestController
-@RequestMapping("api/orders")
 public class OrderController {
 
     @Autowired

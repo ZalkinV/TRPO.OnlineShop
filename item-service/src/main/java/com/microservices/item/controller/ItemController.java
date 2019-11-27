@@ -17,7 +17,6 @@ import java.util.List;
 
 @EnableRabbit
 @RestController
-@RequestMapping("/item")
 public class ItemController {
     private final ItemService itemService;
 
