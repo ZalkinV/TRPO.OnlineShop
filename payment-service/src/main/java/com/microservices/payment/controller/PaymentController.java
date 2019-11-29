@@ -15,7 +15,6 @@ import javax.validation.Valid;
 
 @EnableRabbit
 @RestController
-@RequestMapping("payment")
 public class PaymentController {
     private PaymentService paymentService;
 
