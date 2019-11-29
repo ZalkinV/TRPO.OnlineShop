@@ -2,23 +2,21 @@ package com.microservices.order.controller;
 
 import com.microservices.order.dto.*;
 import com.microservices.order.entity.OrderStatus;
+import com.microservices.order.feign.ItemServiceFeignClient;
+import com.microservices.order.feign.PaymentServiceFeignClient;
 import com.microservices.order.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 @EnableRabbit
 @RestController
-@RequestMapping("api/orders")
 public class OrderController {
 
     @Autowired
@@ -30,7 +28,10 @@ public class OrderController {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private RestTemplate restTemplate;
+    private PaymentServiceFeignClient paymentServiceFeignClient;
+
+    @Autowired
+    private ItemServiceFeignClient itemServiceFeignClient;
 
     @GetMapping
     public List<OrderDto> getAllOrders(){
@@ -49,26 +50,17 @@ public class OrderController {
         @PathVariable(required = false) Optional<Integer> orderId,
         @RequestBody ItemChangeAmountDto additionDto) {
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        HttpEntity <String> entity = new HttpEntity<>(headers);
         int id = additionDto.getItemId();
         int amount = additionDto.getAmount();
+        itemServiceFeignClient.decreaseById(id, amount);
 
-        ResponseEntity<String> result = restTemplate.exchange("http://localhost:8083/item/" + id + "/decreasing/" + amount,
-                HttpMethod.PUT, entity, String.class);
-
-        if (result.getStatusCode() == HttpStatus.OK) {
-            OrderDto resultOrder;
-            if (orderId.isPresent()) {
-                resultOrder = orderService.addItemToOrder(orderId.get(), additionDto);
-            } else {
-                resultOrder = orderService.createNewOrder(additionDto);
-            }
-            return resultOrder;
+        OrderDto resultOrder;
+        if (orderId.isPresent()) {
+            resultOrder = orderService.addItemToOrder(orderId.get(), additionDto);
         } else {
-            throw new IllegalArgumentException("Something went wrong in item service. HttpStatus code: " + result.getStatusCode());
+            resultOrder = orderService.createNewOrder(additionDto);
         }
+        return resultOrder;
     }
 
     @PutMapping(value = "{orderId}/status/{orderStatus}")
@@ -93,23 +85,12 @@ public class OrderController {
 
         OrderDto orderDto = orderService.getOrderById(orderId);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        HttpEntity<PaymentCreationDto> paymentCreationDtoHttpEntity = new HttpEntity<>(
-                new PaymentCreationDto(orderId, userDetailsDto.getCardAuthorizationInfo()), headers);
+        PaymentDto paymentDto = paymentServiceFeignClient.performPayment(new PaymentCreationDto(orderId, userDetailsDto.getCardAuthorizationInfo()));
 
-        ResponseEntity<PaymentDto> result = restTemplate.exchange("http://localhost:8082/payment",
-                HttpMethod.POST, paymentCreationDtoHttpEntity, PaymentDto.class);
-
-        if (result.getStatusCode() == HttpStatus.OK) {
-            PaymentDto paymentDto = result.getBody();
-            if (paymentDto.getStatus() == PaymentStatus.PERFORMED) {
-                orderDto = orderService.setOrderStatus(orderId, OrderStatus.PAID);
-            } else if (paymentDto.getStatus() == PaymentStatus.FAILED) {
-                orderDto = orderService.setOrderStatus(orderId, OrderStatus.FAILED);
-            }
-        } else {
-            throw new IllegalArgumentException("Something went wrong in payment service. HttpStatus code: " + result.getStatusCode());
+        if (paymentDto.getStatus() == PaymentStatus.PERFORMED) {
+            orderDto = orderService.setOrderStatus(orderId, OrderStatus.PAID);
+        } else if (paymentDto.getStatus() == PaymentStatus.FAILED) {
+            orderDto = orderService.setOrderStatus(orderId, OrderStatus.FAILED);
         }
 
         return orderDto;
