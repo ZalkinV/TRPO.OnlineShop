@@ -1,0 +1,132 @@
+version: '3'
+
+services:
+
+  eureka:
+    image: eureka-trpo:1
+    network_mode: bridge
+    build:
+      context: ./
+      dockerfile: Dockerfile-eureka
+    ports:
+      - "8761:8761"
+
+  postgres:
+    image: postgres:latest
+    network_mode: bridge
+    container_name: postgres
+    volumes:
+      - /data/postgres
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=online_shop
+    restart: unless-stopped
+
+
+  item-trpo-container:
+    image: item-trpo:1
+    network_mode: bridge
+    build:
+      context: ./
+      dockerfile: Dockerfile-item
+
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/online_shop?currentSchema=item_schema
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=bitnami
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka
+    volumes:
+      - /data/app-app
+    ports:
+      - "8083:8083"
+
+  gateway-trpo-container:
+    image: gateway-trpo:1
+    network_mode: bridge
+    build:
+      context: ./
+      dockerfile: Dockerfile-gateway
+
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka
+      - item-trpo-container
+      - payment-trpo-container
+      - order-trpo-container
+    links:
+      - "eureka:eureka"
+    volumes:
+      - /data/app-app
+    ports:
+      - "8080:8080"
+
+  order-trpo-container:
+    image: order-trpo:1
+    network_mode: bridge
+    build:
+      context: ./
+      dockerfile: Dockerfile-order
+
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/online_shop?currentSchema=order_schema
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=bitnami
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka
+    volumes:
+      - /data/app-app
+    ports:
+      - "8081:8081"
+  payment-trpo-container:
+    image: payment-trpo:1
+    network_mode: bridge
+    build:
+      context: ./
+      dockerfile: Dockerfile-payment
+
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/online_shop?currentSchema=payment_schema
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=bitnami
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka
+    volumes:
+      - /data/app-app
+    ports:
+      - "8082:8082"
+
+  rabbitmq:
+    image: 'bitnami/rabbitmq:3.8'
+    network_mode: bridge
+    ports:
+      - '4368:4369'
+      - '5672:5672'
+      - '25672:25672'
+      - '15672:15672'
+    volumes:
+      - 'rabbitmq_data:/bitnami'
+volumes:
+  rabbitmq_data:
+    driver: local

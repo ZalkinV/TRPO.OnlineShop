@@ -8,6 +8,8 @@ group = 'com.microservices'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 
+test.enabled=false
+
 repositories {
     mavenCentral()
     maven { url 'https://repo.spring.io/milestone' }
