@@ -18,6 +18,9 @@ import java.util.List;
 @EnableRabbit
 @RestController
 public class ItemController {
+
+    
+    @Autowired
     private final ItemService itemService;
 
     private static final Logger logger = LoggerFactory.getLogger(ItemController.class);

@@ -4,7 +4,6 @@ services:
 
   eureka:
     image: eureka-trpo:1
-    network_mode: bridge
     build:
       context: ./
       dockerfile: Dockerfile-eureka
@@ -13,7 +12,6 @@ services:
 
   postgres:
     image: postgres:latest
-    network_mode: bridge
     container_name: postgres
     volumes:
       - /data/postgres
@@ -30,7 +28,6 @@ services:
 
   item-trpo-container:
     image: item-trpo:1
-    network_mode: bridge
     build:
       context: ./
       dockerfile: Dockerfile-item
@@ -53,7 +50,6 @@ services:
 
   gateway-trpo-container:
     image: gateway-trpo:1
-    network_mode: bridge
     build:
       context: ./
       dockerfile: Dockerfile-gateway
@@ -65,8 +61,6 @@ services:
       - item-trpo-container
       - payment-trpo-container
       - order-trpo-container
-    links:
-      - "eureka:eureka"
     volumes:
       - /data/app-app
     ports:
@@ -74,7 +68,6 @@ services:
 
   order-trpo-container:
     image: order-trpo:1
-    network_mode: bridge
     build:
       context: ./
       dockerfile: Dockerfile-order
@@ -96,7 +89,6 @@ services:
       - "8081:8081"
   payment-trpo-container:
     image: payment-trpo:1
-    network_mode: bridge
     build:
       context: ./
       dockerfile: Dockerfile-payment
@@ -119,7 +111,6 @@ services:
 
   rabbitmq:
     image: 'bitnami/rabbitmq:3.8'
-    network_mode: bridge
     ports:
       - '4368:4369'
       - '5672:5672'
