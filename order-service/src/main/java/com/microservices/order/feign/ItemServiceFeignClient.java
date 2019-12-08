@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 @FeignClient(name="item")
 public interface ItemServiceFeignClient {
-    @PutMapping("/{id}/decreasing/{amount}")
+    @PutMapping("items/{id}/decreasing/{amount}")
     ItemDto decreaseById(@PathVariable long amount, @PathVariable long id);
 
-    @GetMapping("/{id}")
+    @GetMapping("items/{id}")
     ItemDto getById(@PathVariable long id);
 }

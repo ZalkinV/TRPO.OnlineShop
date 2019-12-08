@@ -17,6 +17,7 @@ import java.util.Optional;
 
 @EnableRabbit
 @RestController
+@RequestMapping("order")
 public class OrderController {
 
     @Autowired
@@ -52,7 +53,7 @@ public class OrderController {
 
         int id = additionDto.getItemId();
         int amount = additionDto.getAmount();
-        itemServiceFeignClient.decreaseById(id, amount);
+        itemServiceFeignClient.decreaseById(amount, id);
 
         OrderDto resultOrder;
         if (orderId.isPresent()) {

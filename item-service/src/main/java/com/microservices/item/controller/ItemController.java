@@ -17,6 +17,7 @@ import java.util.List;
 
 @EnableRabbit
 @RestController
+@RequestMapping("items")
 public class ItemController {
 
     

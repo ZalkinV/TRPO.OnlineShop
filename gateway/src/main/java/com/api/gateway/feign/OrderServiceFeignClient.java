@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name="order")
 public interface OrderServiceFeignClient {
-    @GetMapping(value = "{orderId}")
+    @GetMapping(value = "order/{orderId}")
     OrderDto getOrderById(@PathVariable int orderId);
 }
